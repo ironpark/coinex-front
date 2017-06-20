@@ -1,3 +1,5 @@
+.DS_Store
+
 # Logs
 logs
 *.log
@@ -36,6 +38,8 @@ build/Release
 node_modules/
 jspm_packages/
 
+
+dist/
 # Typescript v1 declaration files
 typings/
 
