@@ -2,104 +2,110 @@
   <section class="section">
     <div class="container">
     </div>
+    <span>Selected: {{ currency }}</span>
     <div class="container">
       <b-field grouped>
         <b-field label="Exchange">
           <b-select placeholder="Select...">
-            <option value="Poloniex">Poloniex</option>
+            <option selected value="Poloniex">Poloniex</option>
             <option value="Bittrex">Bittrex</option>
           </b-select>
         </b-field>
         <b-field label="Currency">
-          <b-select placeholder="Select...">
+          <b-select placeholder="Select..." v-model="currency" @change="loadAssets()">
             <option value="BTC">BTC</option>
             <option value="ETH">ETH</option>
           </b-select>
         </b-field>
-        <b-field label="Asset">
-          <b-select placeholder="Select...">
-            <option value="john">John</option>
-            <option value="brok">Brok</option>
-          </b-select>
-        </b-field>
       </b-field>
+      <label>Assets</label>
       <b-table
         :data="tableData"
         :bordered="isBordered"
         :striped="isStriped"
         :narrowed="isNarrowed"
-        :checkable="isCheckable"
+        :checkable="true"
         :mobile-cards="hasMobileCards"
         :paginated="isPaginated"
         :per-page="perPage"
         :pagination-simple="isPaginationSimple"
-        default-sort="user.first_name"
-        :selected.sync="selected"
+        :default-sort="tableData.volume"
+        :selected.sync="tableData.selected"
         :checked-rows.sync="checkedRows">
 
         <template scope="props">
-          <b-table-column field="id" label="ID" width="40" sortable numeric>
-            {{ props.row.id }}
+          <b-table-column field="coin" label="Coin" width="40" sortable numeric>
+            {{ props.row.coin }}
           </b-table-column>
 
-          <b-table-column field="user.first_name" label="First Name" sortable>
-            {{ props.row.user.first_name }}
+          <b-table-column field="price" label="Price" sortable>
+            {{ props.row.price }}
           </b-table-column>
 
-          <b-table-column field="user.last_name" label="Last Name" sortable>
-            {{ props.row.user.last_name }}
+          <b-table-column field="volume" label="Volume" sortable>
+            {{ props.row.volume }}
           </b-table-column>
 
-          <b-table-column field="date" label="Date" sortable>
-          <span v-html="formatDate(props.row.date)"></span>
-          </b-table-column>
-
-          <b-table-column field="gender" label="Gender">
-            <b-icon
-              pack="fa"
-              :icon="props.row.gender === 'Male' ? 'mars' : 'venus'">
-            </b-icon>
-            {{ props.row.gender }}
+          <b-table-column field="change" label="Change" sortable>
+            {{ props.row.change }}
           </b-table-column>
         </template>
       </b-table>
     </div>
   </section>
 </template>
-
 <script>
 export default {
   name: 'hello',
   data () {
     return {
-      tableData: [
-        {'id': 1, 'user': {'first_name': 'Jesse', 'last_name': 'Simmons'}, 'date': '2016-10-15 13:43:27', 'gender': 'Male'},
-        {'id': 2, 'user': {'first_name': 'John', 'last_name': 'Jacobs'}, 'date': '2016-12-15 06:00:53', 'gender': 'Male'},
-        {'id': 3, 'user': {'first_name': 'Tina', 'last_name': 'Gilbert'}, 'date': '2016-04-26 06:26:28', 'gender': 'Female'},
-        {'id': 4, 'user': {'first_name': 'Clarence', 'last_name': 'Flores'}, 'date': '2016-04-10 10:28:46', 'gender': 'Male'},
-        {'id': 5, 'user': {'first_name': 'Anne', 'last_name': 'Lee'}, 'date': '2016-12-06 14:38:38', 'gender': 'Female'}
-      ],
+      currency: 'ETH',
+      coin: ' ',
+      tableData: [],
       checkedRows: [],
       selected: {},
       isBordered: true,
       isStriped: true,
-      isNarrowed: true,
-      isCheckable: true,
+      isNarrowed: false,
       hasMobileCards: true,
       isPaginated: true,
       isPaginationSimple: true,
-      perPage: 10
+      perPage: 15
     }
   },
   methods: {
     formatDate (value, row) {
       return `<span class="tag is-success">${new Date(value).toLocaleDateString()}</span>`
+    },
+    loadAssets () {
+      this.tableData = []
+      const route = 'https://poloniex.com/public?command=returnTicker'
+      this.$http.get(route).then((response) => {
+        let keys = Object.keys(response.data)
+        for (let i = 0; i < keys.length; i++) {
+          let key = keys[i].toString()
+          let item = response.data[key]
+          let coinName = this.currency + '_'
+          if (key.includes(coinName)) {
+            this.tableData.push({'coin': key.replace(coinName, ''), 'price': item.last, 'volume': item.baseVolume, 'change': item.percentChange})
+          }
+        }
+      })
     }
-//    clearSelected() {
-//      this.selected = {}
-//    },
-//    clearCheckedRows() {
-//      this.checkedRows = []
+  },
+  computed: {
+    filteredDataArray () {
+      return this.tableData.filter((option) => {
+        return option
+            .toString()
+            .toLowerCase()
+            .indexOf(this.coin.toLowerCase()) >= 0
+      })
+    }
+  },
+  watch: {
+//    currency: function (newQuestion) {
+//      this.loadAssets(newQuestion)
 //    }
   }
 }
@@ -107,21 +113,5 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1, h2 {
-  font-weight: normal;
-}
 
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
 </style>
