@@ -35,6 +35,11 @@ export default new Router({
       component: Backtest
     },
     {
+      path: '/setting',
+      name: 'Setting',
+      component: Donation
+    },
+    {
       path: '/donation',
       name: 'Donation',
       component: Donation
