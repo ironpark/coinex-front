@@ -1,6 +1,60 @@
 <template>
   <section class="section">
     <div class="container">
+      <h1 class="title is-spaced is-2">Local Datas</h1>
+      <hr>
+      <b-table
+        :data="localDataTable.data"
+        :bordered="false"
+        :striped="true"
+        :mobile-cards="true"
+        :per-page="perPage">
+        <template scope="props">
+          <b-table-column field="exchange" label="Exchange">
+            {{ props.row.ex }}
+          </b-table-column>
+
+          <b-table-column field="coin" label="Coin">
+            {{ props.row.coin }}
+          </b-table-column>
+
+          <b-table-column field="start" label="Start">
+            {{ props.row.start }}
+          </b-table-column>
+
+          <b-table-column field="end" label="End">
+            {{ props.row.end }}
+          </b-table-column>
+
+          <b-table-column field="status" label="Status">
+            {{ props.row.status }}
+          </b-table-column>
+
+          <b-table-column field="export" label="Export">
+            <div class="field has-addons">
+              <p class="control">
+                <a class="button">
+                  <span>CVS</span>
+                </a>
+              </p>
+              <p class="control">
+                <a class="button">
+                  <span>XML</span>
+                </a>
+              </p>
+              <p class="control">
+                <a class="button">
+                  <span>JSON</span>
+                </a>
+              </p>
+            </div>
+          </b-table-column>
+
+          <b-table-column field="running" label="Running" width="70">
+            <b-switch v-model="props.row.running"></b-switch>
+          </b-table-column>
+        </template>
+      </b-table>
       <h1 class="title is-spaced is-2">Assets</h1>
       <hr>
       <b-field grouped>
@@ -28,7 +82,7 @@
       <b-table
         :data="filteredDataArray"
         :bordered="false"
-        :striped="false"
+        :striped="true"
         :narrowed="false"
         :checkable="true"
         :loading="assetTable.loading"
@@ -43,15 +97,15 @@
             {{ props.row.coin }}
           </b-table-column>
 
-          <b-table-column field="price" label="Price" sortable numeric>
+          <b-table-column field="price" label="Price" sortable>
             {{ props.row.price }}
           </b-table-column>
 
-          <b-table-column field="volume" label="Volume" sortable numeric>
+          <b-table-column field="volume" label="Volume" sortable>
             {{ props.row.volume }}
           </b-table-column>
 
-          <b-table-column field="change" label="24h Change" sortable numeric>
+          <b-table-column field="change" label="24h Change" sortable>
             {{ props.row.change+'%' }}
             <b-icon
               :type="props.row.change < 0 ? 'is-danger' : 'is-primary'"
@@ -82,7 +136,17 @@ export default {
         checkedRows: []
       },
       currency: 'BTC',
-      perPage: 10
+      perPage: 10,
+      // local datas
+      localDataTable: {
+        data: [
+          {ex: 'Poloniex', coin: 'SC/BTC', start: '2013-02-01', end: '2017-06-23', status: 'Load BackData', running: true},
+          {ex: 'Poloniex', coin: 'DGB/BTC', start: '2013-02-01', end: '2017-06-23', status: 'Stop', running: false},
+          {ex: 'Poloniex', coin: 'STR/BTC', start: '2015-03-01', end: '2017-06-23', status: 'RealTime Data', running: true},
+          {ex: 'Poloniex', coin: 'XRP/BTC', start: '2017-06-01', end: '2017-06-23', status: 'Load BackData', running: true},
+          {ex: 'Bittrex', coin: 'ARK/BTC', start: '2012-01-01', end: '2017-06-23', status: 'Stop', running: false}
+        ]
+      }
     }
   },
   methods: {

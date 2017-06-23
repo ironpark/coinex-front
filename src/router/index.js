@@ -40,6 +40,11 @@ export default new Router({
       component: Donation
     },
     {
+      path: '/strategy',
+      name: 'strategy',
+      component: Donation
+    },
+    {
       path: '/donation',
       name: 'Donation',
       component: Donation

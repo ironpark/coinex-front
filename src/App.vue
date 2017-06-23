@@ -12,6 +12,7 @@
           <router-link to="dashboard" class="nav-item is-tab" active-class="is-active" exact>DashBoard</router-link>
           <router-link to="trader" class="nav-item is-tab" active-class="is-active" exact>Trader</router-link>
           <router-link to="bucket" class="nav-item is-tab" active-class="is-active" exact>Bucket</router-link>
+          <router-link to="strategy" class="nav-item is-tab" active-class="is-active" exact>Strategy</router-link>
           <router-link to="backtest" class="nav-item is-tab" active-class="is-active" exact>Backtest</router-link>
           <router-link to="setting" class="nav-item is-tab" active-class="is-active" exact>Setting</router-link>
           <router-link to="donation" class="nav-item is-tab" active-class="is-active" exact>Donation</router-link>

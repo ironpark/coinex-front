@@ -5,56 +5,72 @@
       <hr>
       <b-field grouped>
         <b-field label="Exchange">
-          <b-select placeholder="Select..." v-model="assetTable.ex" >
-            <option selected value="poloniex">Poloniex</option>
-            <option value="bittrex">Bittrex</option>
+          <b-select placeholder="Select..." v-model="exchange" >
+            <option v-for="option in exchanges" :value="option.name.toLowerCase()" :key="option.id">
+              {{ option.name }}
+            </option>
           </b-select>
         </b-field>
         <b-field label="Currency">
           <b-select placeholder="Select..." v-model="currency">
-            <option value="BTC">BTC</option>
-            <option value="ETH">ETH</option>
-            <option value="USDT">USDT</option>
+            <option v-for="option in currencys" :value="option.name" :key="option.id">
+              {{ option.name }}
+            </option>
           </b-select>
         </b-field>
         <b-field label="Assets">
-          <b-select placeholder="Select..." v-model="currency">
-            <option value="BTC">ETH</option>
-            <option value="ETH">ETH</option>
-            <option value="USDT">USDT</option>
+          <b-select placeholder="Select..." v-model="asset">
+            <option v-for="option in assets" :value="option.name" :key="option.id">
+              {{ option.name }}
+            </option>
           </b-select>
         </b-field>
         <b-field label="Strategy">
-          <b-select placeholder="Select..." v-model="currency">
-            <option value="BTC">Open/Close SMA Cross</option>
-            <option value="ETH">ETH</option>
-            <option value="USDT">USDT</option>
+          <b-select placeholder="Select..." v-model="strategy">
+            <option v-for="option in strategys" :value="option.name" :key="option.id">
+              {{ option.name }}
+            </option>
           </b-select>
         </b-field>
-        <b-field label="Show Checked Only">
-          <b-switch v-model="assetTable.showCheckedOnly"></b-switch>
-        </b-field>
         <b-field label="Edit">
-          <a class="button is-primary">
-            Add New Trader
-          </a>
-          <a class="button is-primary">
-           Delete
-          </a>
+          <b-switch v-model="tradeTable.edit"></b-switch>
         </b-field>
+        <b-field label="Action">
+          <div class="field has-addons">
+            <p class="control">
+              <a :class="tradeTable.edit?'button':'button is-static'">
+                <b-icon icon="add" class="is-small" ></b-icon>
+                <span>Add</span>
+              </a>
+            </p>
+            <p class="control">
+              <a :class="tradeTable.edit?'button':'button is-static'">
+                <b-icon icon="delete" class="is-small" ></b-icon>
+                <span>Delete</span>
+              </a>
+            </p>
+            <p class="control">
+              <a :class="tradeTable.edit?'button':'button is-static'">
+                <b-icon icon="settings" class="is-small" ></b-icon>
+                <span>Setting</span>
+              </a>
+            </p>
+          </div>
+        </b-field>
+
       </b-field>
       <b-table
-        :data="filteredDataArray"
+        :data="tradeTable.data"
         :bordered="false"
         :striped="false"
         :narrowed="false"
-        :checkable="false"
-        :loading="assetTable.loading"
-        :paginated="!assetTable.showCheckedOnly"
+        :checkable="tradeTable.edit"
+        :loading="tradeTable.loading"
+        :paginated="!tradeTable.showCheckedOnly"
         :mobile-cards="true"
         :per-page="perPage"
-        :default-sort="assetTable.data.volume"
-        :checked-rows.sync="assetTable.checkedRows">
+        :default-sort="tradeTable.data.volume"
+        :checked-rows.sync="tradeTable.checkedRows">
 
         <template scope="props">
           <b-table-column field="coin" label="Exchange" width="60">
@@ -103,7 +119,7 @@
             </b-icon>
           </b-table-column>
           <b-table-column field="change" label="Strategy" sortable>
-            <b-select placeholder="Select..." v-model="currency">
+            <b-select placeholder="Select..." v-model="currency" :disabled="!tradeTable.edit">
               <option value="BTC">BTC</option>
               <option value="ETH">ETH</option>
               <option value="USDT">USDT</option>
@@ -121,15 +137,22 @@
     name: 'bucket',
     data () {
       return {
-        asset: '',
-        assetTable: {
+        exchange: 'poloniex',
+        asset: 'ETH',
+        currency: 'BTC',
+        strategy: 'Open/Close Cross',
+        exchanges: [{'name': 'Poloniex'}, {'name': 'Bittrex'}],
+        currencys: [{'name': 'ETH'}, {'name': 'BTC'}, {'name': 'USDT'}],
+        assets: [{'name': 'ETH'}, {'name': 'BTC'}],
+        strategys: [{'name': 'Open/Close Cross'}, {'name': 'Sma'}],
+        tradeTable: {
+          edit: false,
           showCheckedOnly: false,
           loading: true,
           ex: 'poloniex',
           data: [],
           checkedRows: []
         },
-        currency: 'BTC',
         perPage: 10
       }
     },
@@ -139,16 +162,6 @@
       }
     },
     computed: {
-      filteredDataArray () {
-        return this.assetTable.data.filter((item) => {
-          return (
-            item.currency === (this.currency) &&
-            item.ex === this.assetTable.ex &&
-            item.coin.toLowerCase().includes(this.asset.toLowerCase()) &&
-            (this.assetTable.showCheckedOnly ? this.assetTable.checkedRows.includes(item) : true)
-          )
-        })
-      }
     },
     created () {
       // get poloniex data
@@ -159,7 +172,7 @@
           let item = response.data[key]
           let currencypair = key.match(/(?!_)([A-Z0-9]*)/g)
           let per = Math.floor(item.percentChange * 100)
-          this.assetTable.data.push({
+          this.tradeTable.data.push({
             'currency': currencypair[0],
             'coin': currencypair[1],
             'price': item.last,
@@ -168,7 +181,7 @@
             'ex': 'poloniex'
           })
         }
-        this.assetTable.loading = false
+        this.tradeTable.loading = false
       })
       // get bittrex data
       this.$http.get('https://bittrex.com/api/v1.1/public/getmarketsummaries').then((response) => {
@@ -176,7 +189,7 @@
         for (let i = 0; i < datas.length; i++) {
           let item = datas[i]
           let currencypair = item.MarketName.match(/(?!-)([A-Z0-9]*)/g)
-          this.assetTable.data.push({
+          this.tradeTable.data.push({
             'currency': currencypair[0],
             'coin': currencypair[1],
             'price': item.Last,
