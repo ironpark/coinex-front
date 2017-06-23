@@ -1,7 +1,7 @@
 <template>
   <section class="section">
     <div class="container">
-      <h1 class="title is-spaced is-2">Traders</h1>
+      <h1 class="title is-spaced is-2">Strategys</h1>
       <hr>
       <b-field grouped>
         <b-field label="Exchange">
@@ -26,117 +26,38 @@
           </b-select>
         </b-field>
         <b-field label="Strategy">
-          <div class="field has-addons">
           <b-select placeholder="Select..." v-model="strategy">
             <option v-for="option in strategys" :value="option.name">
               {{ option.name }}
             </option>
           </b-select>
+        </b-field>
+        <b-field label="Edit">
+          <b-switch v-model="tradeTable.edit"></b-switch>
+        </b-field>
+        <b-field label="Action">
+          <div class="field has-addons">
             <p class="control">
-              <a class='button'>
+              <a :class="tradeTable.edit?'button':'button is-static'">
                 <b-icon icon="add" class="is-small" ></b-icon>
                 <span>Add</span>
+              </a>
+            </p>
+            <p class="control">
+              <a :class="tradeTable.edit?'button':'button is-static'">
+                <b-icon icon="delete" class="is-small" ></b-icon>
+                <span>Delete</span>
+              </a>
+            </p>
+            <p class="control">
+              <a :class="tradeTable.edit?'button':'button is-static'">
+                <b-icon icon="settings" class="is-small" ></b-icon>
+                <span>Setting</span>
               </a>
             </p>
           </div>
         </b-field>
       </b-field>
-      <b-field grouped>
-      <b-field label="Edit">
-        <b-switch v-model="tradeTable.edit"></b-switch>
-      </b-field>
-      <b-field label="Action">
-        <div class="field has-addons">
-          <p class="control">
-            <a :class="tradeTable.edit?'button':'button is-static'">
-              <b-icon icon="play_arrow" class="is-small" ></b-icon>
-              <span>Run</span>
-            </a>
-          </p>
-          <p class="control">
-            <a :class="tradeTable.edit?'button':'button is-static'">
-              <b-icon icon="stop" class="is-small" ></b-icon>
-              <span>Stop</span>
-            </a>
-          </p>
-          <p class="control">
-            <a :class="tradeTable.edit?'button':'button is-static'">
-              <b-icon icon="delete" class="is-small" ></b-icon>
-              <span>Delete</span>
-            </a>
-          </p>
-        </div>
-      </b-field>
-      </b-field>
-      <b-table
-        :data="tradeTable.data"
-        :bordered="false"
-        :striped="false"
-        :narrowed="false"
-        :checkable="tradeTable.edit"
-        :loading="tradeTable.loading"
-        :paginated="!tradeTable.showCheckedOnly"
-        :mobile-cards="true"
-        :per-page="perPage"
-        :default-sort="tradeTable.data.volume"
-        :checked-rows.sync="tradeTable.checkedRows">
-
-        <template scope="props">
-          <b-table-column field="coin" label="Exchange" width="60">
-            {{ props.row.ex }}
-          </b-table-column>
-
-          <b-table-column field="price" label="Coins">
-            {{ props.row.price }}
-          </b-table-column>
-
-          <b-table-column field="price" label="Asset">
-            {{ props.row.volume }}
-          </b-table-column>
-
-          <b-table-column field="volume" label="24h Trades">
-            {{ props.row.volume }}
-          </b-table-column>
-
-          <b-table-column field="change" label="Winning rate" sortable>
-            {{ props.row.change+'%' }}
-            <b-icon
-              :type="props.row.change < 0 ? 'is-danger' : 'is-primary'"
-              :icon="props.row.change < 0 ? 'arrow_drop_down' : 'arrow_drop_up'">
-            </b-icon>
-          </b-table-column>
-
-          <b-table-column field="change" label="Profit AVG" sortable>
-            {{ props.row.change+'%' }}
-            <b-icon
-              :type="props.row.change < 0 ? 'is-danger' : 'is-primary'"
-              :icon="props.row.change < 0 ? 'arrow_drop_down' : 'arrow_drop_up'">
-            </b-icon>
-          </b-table-column>
-          <b-table-column field="change" label="Day Profit" sortable>
-            {{ props.row.change+'%' }}
-            <b-icon
-              :type="props.row.change < 0 ? 'is-danger' : 'is-primary'"
-              :icon="props.row.change < 0 ? 'arrow_drop_down' : 'arrow_drop_up'">
-            </b-icon>
-          </b-table-column>
-          <b-table-column field="change" label="Total Profit" sortable>
-            {{ props.row.change+'%' }}
-            <b-icon
-              :type="props.row.change < 0 ? 'is-danger' : 'is-primary'"
-              :icon="props.row.change < 0 ? 'arrow_drop_down' : 'arrow_drop_up'">
-            </b-icon>
-          </b-table-column>
-          <b-table-column field="change" label="Setting" sortable>
-            <a :class="tradeTable.edit?'button':'button is-static'">
-              <b-icon icon="settings" class="is-small" ></b-icon>
-              <span>Setting</span>
-            </a>
-          </b-table-column>
-
-        </template>
-      </b-table>
-
     </div>
   </section>
 </template>

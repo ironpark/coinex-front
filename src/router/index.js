@@ -6,6 +6,7 @@ import Trader from '@/components/Trader'
 import Bucket from '@/components/Bucket'
 import Backtest from '@/components/Backtest'
 import Donation from '@/components/Donation'
+import Strategy from '@/components/Strategy'
 Vue.use(Router)
 export default new Router({
   routes: [
@@ -42,7 +43,7 @@ export default new Router({
     {
       path: '/strategy',
       name: 'strategy',
-      component: Donation
+      component: Strategy
     },
     {
       path: '/donation',
