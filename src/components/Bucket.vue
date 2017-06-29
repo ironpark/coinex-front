@@ -115,7 +115,7 @@
         </template>
       </b-table>
       <div class="control row">
-        <a class="button is-medium is-primary">
+        <a class="button is-medium is-primary" v-on:click="save()">
           Save changes
         </a>
       </div>
@@ -123,6 +123,7 @@
   </section>
 </template>
 <script>
+const api = 'http://localhost:8080/api/v1'
 export default {
   name: 'bucket',
   data () {
@@ -139,19 +140,25 @@ export default {
       perPage: 10,
       // local datas
       localDataTable: {
-        data: [
-          {ex: 'Poloniex', coin: 'SC/BTC', start: '2013-02-01', end: '2017-06-23', status: 'Load BackData', running: true},
-          {ex: 'Poloniex', coin: 'DGB/BTC', start: '2013-02-01', end: '2017-06-23', status: 'Stop', running: false},
-          {ex: 'Poloniex', coin: 'STR/BTC', start: '2015-03-01', end: '2017-06-23', status: 'RealTime Data', running: true},
-          {ex: 'Poloniex', coin: 'XRP/BTC', start: '2017-06-01', end: '2017-06-23', status: 'Load BackData', running: true},
-          {ex: 'Bittrex', coin: 'ARK/BTC', start: '2012-01-01', end: '2017-06-23', status: 'Stop', running: false}
-        ]
+        data: []
       }
     }
   },
   methods: {
     formatDate (value, row) {
       return `<span class="tag is-success">${new Date(value).toLocaleDateString()}</span>`
+    },
+    save () {
+      let time = new Date().toUTCString()
+      let data = this.assetTable.checkedRows
+      for (let i = 0; i < data.length; i++) {
+        let form = new FormData()
+        form.set('ex', data[i].ex)
+        form.set('base', data[i].currency)
+        form.set('pair', data[i].coin)
+        form.set('start', time)
+        this.$http.post(api + '/bucket/assets', form)
+      }
     }
   },
   computed: {
@@ -167,6 +174,14 @@ export default {
     }
   },
   created () {
+    this.$http.get(api + '/bucket/assets').then((response) => {
+      let data = response.data
+      for (let i = 0; i < data.length; i++) {
+        let v = data[i]
+        let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
+        this.localDataTable.data.push(item)
+      }
+    })
     // get poloniex data
     this.$http.get('http://poloniex.com/public?command=returnTicker').then((response) => {
       let keys = Object.keys(response.data)
