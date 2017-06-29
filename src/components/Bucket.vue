@@ -1,5 +1,38 @@
 <template>
   <section class="section">
+    <b-modal
+      :active.sync="SaveModalActive"
+      :props="formProps"
+      :width="800">
+      <div class="modal-card">
+        <form action="">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Login</p>
+          </header>
+          <section class="modal-card-body">
+            <b-field label="Email">
+              <datepicker  class="input is-success" :value="state.date"></datepicker>
+            </b-field>
+
+            <b-field label="Password">
+              <b-input
+                type="password"
+                v-model="password"
+                password-reveal
+                placeholder="Your password"
+                required>
+              </b-input>
+            </b-field>
+
+            <b-checkbox>Remember me</b-checkbox>
+          </section>
+          <footer class="modal-card-foot">
+            <button class="button" type="button" @click="$emit('close')">Close</button>
+            <button class="button is-primary">Login</button>
+          </footer>
+        </form>
+      </div>
+    </b-modal>
     <div class="container">
       <h1 class="title is-spaced is-2">Local Datas</h1>
       <hr>
@@ -115,111 +148,132 @@
         </template>
       </b-table>
       <div class="control row">
-        <a class="button is-medium is-primary" v-on:click="save()">
-          Save changes
-        </a>
+        <!--<a class="button is-medium is-primary" v-on:click="save()">-->
+        <!--Save changes-->
+        <!--</a>-->
+        <button class="button is-primary is-medium" @click="SaveModalActive = true">Save Changes</button>
       </div>
     </div>
   </section>
 </template>
 <script>
-const api = 'http://localhost:8080/api/v1'
-export default {
-  name: 'bucket',
-  data () {
-    return {
-      asset: '',
-      assetTable: {
-        showCheckedOnly: false,
-        loading: true,
-        ex: 'poloniex',
-        data: [],
-        checkedRows: []
-      },
-      currency: 'BTC',
-      perPage: 10,
-      // local datas
-      localDataTable: {
-        data: []
+  import Datepicker from 'vuejs-datepicker'
+  const api = 'http://localhost:8080/api/v1'
+  export default {
+    name: 'bucket',
+    data () {
+      return {
+        state: {
+          date: new Date(2016, 9, 16)
+        },
+        SaveModalActive: false,
+        formProps: {
+          email: 'evan@you.com',
+          password: 'testing'
+        },
+        asset: '',
+        assetTable: {
+          showCheckedOnly: false,
+          loading: true,
+          ex: 'poloniex',
+          data: [],
+          checkedRows: []
+        },
+        currency: 'BTC',
+        perPage: 10,
+        // local datas
+        localDataTable: {
+          data: []
+        }
       }
-    }
-  },
-  methods: {
-    formatDate (value, row) {
-      return `<span class="tag is-success">${new Date(value).toLocaleDateString()}</span>`
     },
-    save () {
-      let time = new Date().toUTCString()
-      let data = this.assetTable.checkedRows
-      for (let i = 0; i < data.length; i++) {
-        let form = new FormData()
-        form.set('ex', data[i].ex)
-        form.set('base', data[i].currency)
-        form.set('pair', data[i].coin)
-        form.set('start', time)
-        this.$http.post(api + '/bucket/assets', form)
+    methods: {
+      formatDate (value, row) {
+        return `<span class="tag is-success">${new Date(value).toLocaleDateString()}</span>`
+      },
+      save () {
+        let time = new Date().toUTCString()
+        let data = this.assetTable.checkedRows
+        for (let i = 0; i < data.length; i++) {
+          let form = new FormData()
+          form.set('ex', data[i].ex)
+          form.set('base', data[i].currency)
+          form.set('pair', data[i].coin)
+          form.set('start', time)
+          this.$http.post(api + '/bucket/assets', form)
+        }
+        this.localDataTable.data = []
+        this.$http.get(api + '/bucket/assets').then((response) => {
+          let data = response.data
+          for (let i = 0; i < data.length; i++) {
+            let v = data[i]
+            let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
+            this.localDataTable.data.push(item)
+          }
+        })
       }
-    }
-  },
-  computed: {
-    filteredDataArray () {
-      return this.assetTable.data.filter((item) => {
-        return (
-          item.currency === (this.currency) &&
-          item.ex === this.assetTable.ex &&
-          item.coin.toLowerCase().includes(this.asset.toLowerCase()) &&
-          (this.assetTable.showCheckedOnly ? this.assetTable.checkedRows.includes(item) : true)
-        )
+    },
+    computed: {
+      filteredDataArray () {
+        return this.assetTable.data.filter((item) => {
+          return (
+            item.currency === (this.currency) &&
+            item.ex === this.assetTable.ex &&
+            item.coin.toLowerCase().includes(this.asset.toLowerCase()) &&
+            (this.assetTable.showCheckedOnly ? this.assetTable.checkedRows.includes(item) : true)
+          )
+        })
+      }
+    },
+    created () {
+      this.$http.get(api + '/bucket/assets').then((response) => {
+        let data = response.data
+        for (let i = 0; i < data.length; i++) {
+          let v = data[i]
+          let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
+          this.localDataTable.data.push(item)
+        }
       })
+      // get poloniex data
+      this.$http.get('http://poloniex.com/public?command=returnTicker').then((response) => {
+        let keys = Object.keys(response.data)
+        for (let i = 0; i < keys.length; i++) {
+          let key = keys[i].toString()
+          let item = response.data[key]
+          let currencypair = key.match(/(?!_)([A-Z0-9]*)/g)
+          let per = Math.floor(item.percentChange * 100)
+          this.assetTable.data.push({
+            'currency': currencypair[0],
+            'coin': currencypair[1],
+            'price': item.last,
+            'volume': Math.floor(item.baseVolume),
+            'change': per,
+            'ex': 'poloniex'
+          })
+        }
+        this.assetTable.loading = false
+      })
+      // get bittrex data
+      this.$http.get('https://bittrex.com/api/v1.1/public/getmarketsummaries').then((response) => {
+        let datas = response.data.result
+        for (let i = 0; i < datas.length; i++) {
+          let item = datas[i]
+          let currencypair = item.MarketName.match(/(?!-)([A-Z0-9]*)/g)
+          this.assetTable.data.push({
+            'currency': currencypair[0],
+            'coin': currencypair[1],
+            'price': item.Last,
+            'volume': Math.floor(item.BaseVolume),
+            'change': Math.floor(item.Last / item.PrevDay * 100 - 100),
+            'ex': 'bittrex'
+          })
+        }
+      })
+    },
+    components: {
+      Datepicker
     }
-  },
-  created () {
-    this.$http.get(api + '/bucket/assets').then((response) => {
-      let data = response.data
-      for (let i = 0; i < data.length; i++) {
-        let v = data[i]
-        let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
-        this.localDataTable.data.push(item)
-      }
-    })
-    // get poloniex data
-    this.$http.get('http://poloniex.com/public?command=returnTicker').then((response) => {
-      let keys = Object.keys(response.data)
-      for (let i = 0; i < keys.length; i++) {
-        let key = keys[i].toString()
-        let item = response.data[key]
-        let currencypair = key.match(/(?!_)([A-Z0-9]*)/g)
-        let per = Math.floor(item.percentChange * 100)
-        this.assetTable.data.push({
-          'currency': currencypair[0],
-          'coin': currencypair[1],
-          'price': item.last,
-          'volume': Math.floor(item.baseVolume),
-          'change': per,
-          'ex': 'poloniex'
-        })
-      }
-      this.assetTable.loading = false
-    })
-    // get bittrex data
-    this.$http.get('https://bittrex.com/api/v1.1/public/getmarketsummaries').then((response) => {
-      let datas = response.data.result
-      for (let i = 0; i < datas.length; i++) {
-        let item = datas[i]
-        let currencypair = item.MarketName.match(/(?!-)([A-Z0-9]*)/g)
-        this.assetTable.data.push({
-          'currency': currencypair[0],
-          'coin': currencypair[1],
-          'price': item.Last,
-          'volume': Math.floor(item.BaseVolume),
-          'change': Math.floor(item.Last / item.PrevDay * 100 - 100),
-          'ex': 'bittrex'
-        })
-      }
-    })
   }
-}
-
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
