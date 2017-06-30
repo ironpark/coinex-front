@@ -9,26 +9,24 @@
           <header class="modal-card-head">
             <p class="modal-card-title">Login</p>
           </header>
-          <section class="modal-card-body">
-            <b-field label="Email">
-              <datepicker  class="input is-success" :value="state.date"></datepicker>
-            </b-field>
+          <section class="modal-card-body" style="height:420px;">
 
-            <b-field label="Password">
-              <b-input
-                type="password"
-                v-model="password"
-                password-reveal
-                placeholder="Your password"
-                required>
-              </b-input>
+            <b-field label="Start Date (ISO)">
+              <datepicker v-model="state.date"></datepicker>
+              <!--<b-input-->
+                <!--type="password"-->
+                <!--v-model="password"-->
+                <!--password-reveal-->
+                <!--placeholder="Your password"-->
+                <!--required>-->
+              <!--</b-input>-->
             </b-field>
 
             <b-checkbox>Remember me</b-checkbox>
           </section>
           <footer class="modal-card-foot">
             <button class="button" type="button" @click="$emit('close')">Close</button>
-            <button class="button is-primary">Login</button>
+            <button class="button is-primary" @click="save()">Save Changes</button>
           </footer>
         </form>
       </div>
@@ -157,14 +155,15 @@
   </section>
 </template>
 <script>
-  import Datepicker from 'vuejs-datepicker'
+  import Datepicker from 'vue-date'
   const api = 'http://localhost:8080/api/v1'
   export default {
     name: 'bucket',
     data () {
       return {
         state: {
-          date: new Date(2016, 9, 16)
+          date: new Date().toISOString()
+//          .slice(0, 10).replace(/\. /g, '-')
         },
         SaveModalActive: false,
         formProps: {
@@ -192,14 +191,13 @@
         return `<span class="tag is-success">${new Date(value).toLocaleDateString()}</span>`
       },
       save () {
-        let time = new Date().toUTCString()
         let data = this.assetTable.checkedRows
         for (let i = 0; i < data.length; i++) {
           let form = new FormData()
           form.set('ex', data[i].ex)
           form.set('base', data[i].currency)
           form.set('pair', data[i].coin)
-          form.set('start', time)
+          form.set('start', new Date(this.state.date).getUTCSeconds().toString())
           this.$http.post(api + '/bucket/assets', form)
         }
         this.localDataTable.data = []
@@ -277,7 +275,11 @@
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
+  .date-picker .input {
+   box-shadow: none;
+   border: none;
+  }
   .title{
     text-align: left;
   }
