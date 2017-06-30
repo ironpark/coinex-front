@@ -192,12 +192,13 @@
       },
       save () {
         let data = this.assetTable.checkedRows
+        let date = Math.floor(new Date(this.state.date) / 1000).toString()
         for (let i = 0; i < data.length; i++) {
           let form = new FormData()
           form.set('ex', data[i].ex)
           form.set('base', data[i].currency)
           form.set('pair', data[i].coin)
-          form.set('start', new Date(this.state.date).getUTCSeconds().toString())
+          form.set('start', date)
           this.$http.post(api + '/bucket/assets', form)
         }
         this.localDataTable.data = []
