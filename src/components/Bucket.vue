@@ -9,19 +9,17 @@
           <header class="modal-card-head">
             <p class="modal-card-title">Login</p>
           </header>
-          <section class="modal-card-body" style="height:420px;">
-
+          <section class="modal-card-body" style="height:220px;">
             <b-field label="Start Date (ISO)">
               <datepicker v-model="state.date"></datepicker>
               <!--<b-input-->
-                <!--type="password"-->
-                <!--v-model="password"-->
-                <!--password-reveal-->
-                <!--placeholder="Your password"-->
-                <!--required>-->
+              <!--type="password"-->
+              <!--v-model="password"-->
+              <!--password-reveal-->
+              <!--placeholder="Your password"-->
+              <!--required>-->
               <!--</b-input>-->
             </b-field>
-
             <b-checkbox>Remember me</b-checkbox>
           </section>
           <footer class="modal-card-foot">
@@ -206,10 +204,11 @@
           let data = response.data
           for (let i = 0; i < data.length; i++) {
             let v = data[i]
-            let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
+            let item = {ex: v.Ex, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
             this.localDataTable.data.push(item)
           }
         })
+        this.SaveModalActive = false
       }
     },
     computed: {
@@ -225,11 +224,24 @@
       }
     },
     created () {
+      // server sent event
+      let evtSource = new EventSource(api + '/sse/bucket')
+      let p = this
+      evtSource.onmessage = function (e) {
+        let v = JSON.parse(e.data).Data
+        for (let i = 0; i < p.localDataTable.data.length; i++) {
+          let data = p.localDataTable.data[i]
+          // http://localhost:8000/#/bucket
+          if (data.ex.includes(v.Exchange) && data.coin.includes(v.Pair + '/' + v.Base)) {
+            p.localDataTable.data[i] = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toLocaleString(), end: new Date(v.Last).toLocaleString(), status: v.Type, running: !v.Stop}
+          }
+        }
+      }
       this.$http.get(api + '/bucket/assets').then((response) => {
         let data = response.data
         for (let i = 0; i < data.length; i++) {
           let v = data[i]
-          let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toTimeString(), end: new Date(v.Last).toTimeString(), status: 'Load BackData', running: !v.Stop}
+          let item = {ex: v.Exchange, coin: v.Pair + '/' + v.Base, start: new Date(v.First).toLocaleString(), end: new Date(v.Last).toLocaleString(), status: 'Load BackData', running: !v.Stop}
           this.localDataTable.data.push(item)
         }
       })
@@ -278,8 +290,8 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
   .date-picker .input {
-   box-shadow: none;
-   border: none;
+    box-shadow: none;
+    border: none;
   }
   .title{
     text-align: left;
